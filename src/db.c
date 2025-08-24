@@ -745,6 +745,9 @@ void destroy_db(void)
 
     /* Spells */
     spedit_free_memory();
+    
+    /* Crafting Recipes */
+    free_recipes(); // <--- ADICIONE ESTA LINHA AQUI
 }
 
 /* body of the booting system */
