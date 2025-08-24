@@ -39,7 +39,7 @@
 #include "msgedit.h"
 #include "screen.h"
 #include <sys/stat.h>
-
+#include "crafting.h"
 #include "spedit.h"
 
 /* */
