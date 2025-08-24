@@ -857,6 +857,8 @@ struct obj_data {
     struct char_data *worn_by;               /**< Points to PC/NPC wearing, or NULL */
     sh_int worn_on;                          /**< If the object can be worn, where can it be worn? */
 
+    int quality; // <--- ADICIONE ESTA LINHA AQUI
+
     struct obj_data *in_obj;   /**< Points to carrying object, or NULL */
     struct obj_data *contains; /**< List of objects being carried, or NULL */
 
