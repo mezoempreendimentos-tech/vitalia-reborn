@@ -885,7 +885,9 @@ void boot_db(void)
     }
 
     reset_q.head = reset_q.tail = NULL;
-
+    log1("Loading crafting recipes."); /* CORREÇÃO: Usando log1() */
+    load_recipes();
+    
     if (!boot_time)
         boot_time = time(0);
 
