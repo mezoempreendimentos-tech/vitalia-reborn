@@ -88,7 +88,7 @@ int objsave_save_obj_record(struct obj_data *obj, FILE *fp, int locate)
     } else
         *buf1 = 0;
 
-    fprintf(fp, "#%d\n", GET_OBJ_VNUM(obj));
+    fprintf(fp, "#%d %d\n", GET_OBJ_VNUM(obj), OBJ_VERSION);
     if (locate)
         fprintf(fp, "Loc : %d\n", locate);
     if (GET_OBJ_VAL(obj, 0) != GET_OBJ_VAL(temp, 0) || GET_OBJ_VAL(obj, 1) != GET_OBJ_VAL(temp, 1) ||
@@ -158,6 +158,11 @@ int objsave_save_obj_record(struct obj_data *obj, FILE *fp, int locate)
             }
         }
     }
+    /* MODIFICAÇÃO 2: Adicionamos o salvamento da Qualidade aqui. */
+    /* Como o sistema só salva diferenças, checamos se a qualidade do objeto
+       é diferente da qualidade do protótipo (que é 0, ou QUALITY_COMUM). */
+    if (GET_OBJ_QUALITY(obj) != GET_OBJ_QUALITY(temp))
+        fprintf(fp, "Qual: %d\n", GET_OBJ_QUALITY(obj));
 
     fprintf(fp, "\n");
 
