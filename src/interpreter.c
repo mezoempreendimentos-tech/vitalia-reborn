@@ -127,6 +127,7 @@ cpp_extern const struct command_info cmd_info[] = {
     {"close", "cl", POS_SITTING, do_gen_door, 0, SCMD_CLOSE, CMD_TWOARG},
     {"clear", "cle", POS_DEAD, do_gen_ps, 0, SCMD_CLEAR, CMD_NOARG},
     {"cls", "cls", POS_DEAD, do_gen_ps, 0, SCMD_CLEAR, CMD_NOARG},
+    { "coletar",    "gather",     POS_STANDING, do_gather,  0, 0 }
     {"consider", "con", POS_RESTING, do_consider, 0, 0, CMD_ONEARG},
     {"commands", "com", POS_DEAD, do_commands, 0, SCMD_COMMANDS, CMD_NOARG},
     {"combo", "comb", POS_FIGHTING, do_cast, 1, SKILL_COMBO_ATTACK, CMD_ONEARG},
@@ -207,6 +208,7 @@ cpp_extern const struct command_info cmd_info[] = {
     {"last", "last", POS_DEAD, do_last, LVL_GOD, 0, CMD_NOARG},
     {"land", "lan", POS_DEAD, do_fly, 1, SCMD_LAND, CMD_NOARG},
     {"leave", "lea", POS_STANDING, do_leave, 0, 0, CMD_NOARG},
+    { "legado",     "legacy",     POS_STANDING, do_legacy,  0, 0 }
     {"levels", "lev", POS_DEAD, do_levels, 0, 0, CMD_NOARG},
     {"leilao", "lei", POS_STANDING, do_auction, 0, 0, CMD_THREEARG},
     {"leiloes", "leilo", POS_STANDING, do_auctions, 0, 0, CMD_NOARG},
@@ -260,6 +262,7 @@ cpp_extern const struct command_info cmd_info[] = {
     {"portal", "portal", POS_DEAD, do_portal, LVL_GOD, 0, CMD_NOARG},
     {"pour", "pour", POS_STANDING, do_pour, 0, SCMD_POUR, CMD_TWOARG},
     {"pray", "pra", POS_RESTING, do_pray, 0, 0, CMD_NOARG},
+    { "produzir",   "craft",      POS_STANDING, do_craft,   0, 0 }
     {"prompt", "pro", POS_DEAD, do_display, 0, 0, CMD_NOARG},
     {"prefedit", "pre", POS_DEAD, do_oasis_prefedit, 0, 0, CMD_NOARG},
     {"purge", "purge", POS_DEAD, do_purge, LVL_BUILDER, 0, CMD_NOARG},
