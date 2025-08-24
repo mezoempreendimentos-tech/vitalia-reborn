@@ -26,6 +26,8 @@
 /* these factors should be unique integers */
 #define RENT_FACTOR 1
 #define CRYO_FACTOR 4
+// Adicione esta linha perto do topo de objsave.c
+#define OBJ_VERSION    1
 
 #define LOC_INVENTORY 0
 #define MAX_BAG_ROWS 5
