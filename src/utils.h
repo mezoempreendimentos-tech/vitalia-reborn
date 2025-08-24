@@ -1202,4 +1202,7 @@ int get_mob_skill(struct char_data *ch, int skill_num);
 /** Experimental bank system enabled? */
 #define CONFIG_EXPERIMENTAL_BANK_SYSTEM config_info.experimental.experimental_bank_system
 
+/* Defines para o sistema de Crafting */
+#define GET_OBJ_QUALITY(obj)     ((obj)->quality)  
+  
 #endif /* _UTILS_H_ */
