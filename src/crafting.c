@@ -138,4 +138,9 @@ void load_crafting_skills(void) {
         skill->id = atoi(strtok(line, "~"));
         skill->name = strdup(strtok(NULL, "~"));
         
-        skill->next = craft_skill
+        // CORREÇÃO APLICADA AQUI:
+        skill->next = craft_skill_list;
+        craft_skill_list = skill;
+    }
+    fclose(fp);
+}
