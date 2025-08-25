@@ -1147,7 +1147,16 @@ obj_save_data *objsave_parse_objects(FILE *fl)
                     GET_OBJ_AFFECT(temp)[3] = asciiflag_conv(f4);
                 }
                 break;
+            case 'Q': // <-- ADICIONE ESTE BLOCO AQUI
+          if (!strcmp(tag, "Qual")) {
+            if (version >= 1) { // Só lê se a versão do arquivo for 1 ou maior
+               sscanf(line, "%d", &t[0]);
+               GET_OBJ_QUALITY(temp) = t[0];
+            }
+          }
+          break;
             case 'R':
+          if (!strcmp(tag, "Rent")):
                 if (!strcmp(tag, "Rent"))
                     GET_OBJ_RENT(temp) = num;
                 break;
