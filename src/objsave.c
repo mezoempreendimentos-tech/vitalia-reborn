@@ -1030,15 +1030,20 @@ obj_save_data *objsave_parse_objects(FILE *fl)
         /* if it's a new record, wrap up the old one, and make space for a new one */
         if (*line == '#') {
             /* check for false alarm. */
-            if (sscanf(line, "#%d", &nr) == 1) {
-                /* If we attempt to load an object with a legal VNUM 0-65534, that
-                 * does not exist, skip it. If the object has a VNUM of NOTHING or
-                 * 65535, then we assume it doesn't exist on purpose. (Custom Item,
-                 * Coins, Corpse, etc...) */
-                if (real_object(nr) == NOTHING && nr != NOTHING) {
-                    log1("SYSERR: Prevented loading of non-existant item #%d.", nr);
-                    continue;
-                }
+            int version = 0; // Variável para a versão do objeto.
+          if (sscanf(line, "#%d %d", &nr, &version) >= 1) {
+            /* Esta linha agora tenta ler o VNUM e a Versão.
+             * Se for um arquivo antigo, sscanf retornará 1, e 'version' continuará 0.
+             * Se for um arquivo novo, sscanf retornará 2 e 'version' terá o valor correto. */
+
+            /* If we attempt to load an object with a legal VNUM 0-65534, that
+             * does not exist, skip it. If the object has a VNUM of NOTHING or
+             * 65535, then we assume it doesn't exist on purpose. (Custom Item,
+             * Coins, Corpse, etc...) */
+            if (real_object(nr) == NOTHING && nr != NOTHING) {
+              log("SYSERR: Prevented loading of non-existant item #%d.", nr);
+              continue;
+            }
 
                 if (temp) {
                     current->obj = temp;
