@@ -988,6 +988,7 @@ obj_save_data *objsave_parse_objects(FILE *fl)
     char f1[128], f2[128], f3[128], f4[128], line[READ_SIZE];
     int t[4], i, nr;
     struct obj_data *temp;
+    int version = 0; // CORREÇÃO: Declarada aqui para ser visível em todo o loop.
 
     CREATE(current, obj_save_data, 1);
     head = current;
@@ -1030,20 +1031,12 @@ obj_save_data *objsave_parse_objects(FILE *fl)
         /* if it's a new record, wrap up the old one, and make space for a new one */
         if (*line == '#') {
             /* check for false alarm. */
-            int version = 0; // Variável para a versão do objeto.
-          if (sscanf(line, "#%d %d", &nr, &version) >= 1) {
-            /* Esta linha agora tenta ler o VNUM e a Versão.
-             * Se for um arquivo antigo, sscanf retornará 1, e 'version' continuará 0.
-             * Se for um arquivo novo, sscanf retornará 2 e 'version' terá o valor correto. */
-
-            /* If we attempt to load an object with a legal VNUM 0-65534, that
-             * does not exist, skip it. If the object has a VNUM of NOTHING or
-             * 65535, then we assume it doesn't exist on purpose. (Custom Item,
-             * Coins, Corpse, etc...) */
-            if (real_object(nr) == NOTHING && nr != NOTHING) {
-              log("SYSERR: Prevented loading of non-existant item #%d.", nr);
-              continue;
-            }
+            version = 0; // CORREÇÃO: Reset da versão para cada novo objeto.
+            if (sscanf(line, "#%d %d", &nr, &version) >= 1) { // CORREÇÃO: Leitura da versão
+                if (real_object(nr) == NOTHING && nr != NOTHING) {
+                    log1("SYSERR: Prevented loading of non-existant item #%d.", nr); // CORREÇÃO: log1
+                    continue;
+                }
 
                 if (temp) {
                     current->obj = temp;
@@ -1056,8 +1049,7 @@ obj_save_data *objsave_parse_objects(FILE *fl)
             } else
                 continue;
 
-            /* we have the number, check it, load obj. */
-            if (nr == NOTHING) { /* then it is unique */
+            if (nr == NOTHING) {
                 temp = create_obj();
                 temp->item_number = NOTHING;
             } else if (nr < 0) {
@@ -1065,18 +1057,13 @@ obj_save_data *objsave_parse_objects(FILE *fl)
             } else {
                 if (real_object(nr) != NOTHING) {
                     temp = read_object(nr, VIRTUAL);
-                    /* Go read next line - nothing more to see here. */
                 } else {
                     log1("Nonexistent object %d found in rent file.", nr);
                 }
             }
-            /* go read next line - nothing more to see here. */
             continue;
         }
 
-        /* If "temp" is NULL, we are most likely progressing through
-         * a non-existant object, so just keep continuing till we find
-         * the next object */
         if (temp == NULL)
             continue;
 
@@ -1084,109 +1071,108 @@ obj_save_data *objsave_parse_objects(FILE *fl)
         num = atoi(line);
 
         switch (*tag) {
-            case 'A':
-                if (!strcmp(tag, "ADes")) {
-                    char error[40];
-                    snprintf(error, sizeof(error) - 1, "rent(Ades):%s", temp->name);
-                    temp->action_description = fread_string(fl, error);
-                } else if (!strcmp(tag, "Aff ")) {
-                    sscanf(line, "%d %d %d", &t[0], &t[1], &t[2]);
-                    if (t[0] < MAX_OBJ_AFFECT) {
-                        temp->affected[t[0]].location = t[1];
-                        temp->affected[t[0]].modifier = t[2];
-                    }
+        case 'A':
+            if (!strcmp(tag, "ADes")) {
+                char error[40];
+                snprintf(error, sizeof(error) - 1, "rent(Ades):%s", temp->name);
+                temp->action_description = fread_string(fl, error);
+            } else if (!strcmp(tag, "Aff ")) {
+                sscanf(line, "%d %d %d", &t[0], &t[1], &t[2]);
+                if (t[0] < MAX_OBJ_AFFECT) {
+                    temp->affected[t[0]].location = t[1];
+                    temp->affected[t[0]].modifier = t[2];
                 }
-                break;
-            case 'C':
-                if (!strcmp(tag, "Cost"))
-                    GET_OBJ_COST(temp) = num;
-                break;
-            case 'D':
-                if (!strcmp(tag, "Desc"))
-                    temp->description = strdup(line);
-                break;
-            case 'E':
-                if (!strcmp(tag, "EDes")) {
-                    struct extra_descr_data *new_desc;
-                    char error[40];
-                    snprintf(error, sizeof(error) - 1, "rent(Edes): %s", temp->name);
-                    if (temp->item_number != NOTHING && /* Regular object */
-                        temp->ex_description &&         /* with ex_desc == prototype */
-                        (temp->ex_description == obj_proto[real_object(temp->item_number)].ex_description))
-                        temp->ex_description = NULL;
-                    CREATE(new_desc, struct extra_descr_data, 1);
-                    new_desc->keyword = fread_string(fl, error);
-                    new_desc->description = fread_string(fl, error);
-                    new_desc->next = temp->ex_description;
-                    temp->ex_description = new_desc;
-                }
-                break;
-            case 'F':
-                if (!strcmp(tag, "Flag")) {
-                    sscanf(line, "%s %s %s %s", f1, f2, f3, f4);
-                    GET_OBJ_EXTRA(temp)[0] = asciiflag_conv(f1);
-                    GET_OBJ_EXTRA(temp)[1] = asciiflag_conv(f2);
-                    GET_OBJ_EXTRA(temp)[2] = asciiflag_conv(f3);
-                    GET_OBJ_EXTRA(temp)[3] = asciiflag_conv(f4);
-                }
-                break;
-            case 'L':
-                if (!strcmp(tag, "Loc "))
-                    current->locate = num;
-                break;
-            case 'N':
-                if (!strcmp(tag, "Name"))
-                    temp->name = strdup(line);
-                break;
-            case 'P':
-                if (!strcmp(tag, "Perm")) {
-                    sscanf(line, "%s %s %s %s", f1, f2, f3, f4);
-                    GET_OBJ_AFFECT(temp)[0] = asciiflag_conv(f1);
-                    GET_OBJ_AFFECT(temp)[1] = asciiflag_conv(f2);
-                    GET_OBJ_AFFECT(temp)[2] = asciiflag_conv(f3);
-                    GET_OBJ_AFFECT(temp)[3] = asciiflag_conv(f4);
-                }
-                break;
-            case 'Q': // <-- ADICIONE ESTE BLOCO AQUI
-          if (!strcmp(tag, "Qual")) {
-            if (version >= 1) { // Só lê se a versão do arquivo for 1 ou maior
-               sscanf(line, "%d", &t[0]);
-               GET_OBJ_QUALITY(temp) = t[0];
             }
-          }
-          break;
-            case 'R':
-          if (!strcmp(tag, "Rent")):
-                if (!strcmp(tag, "Rent"))
-                    GET_OBJ_RENT(temp) = num;
-                break;
-            case 'S':
-                if (!strcmp(tag, "Shrt"))
-                    temp->short_description = strdup(line);
-                break;
-            case 'T':
-                if (!strcmp(tag, "Type"))
-                    GET_OBJ_TYPE(temp) = num;
-                break;
-            case 'W':
-                if (!strcmp(tag, "Wear")) {
-                    sscanf(line, "%s %s %s %s", f1, f2, f3, f4);
-                    GET_OBJ_WEAR(temp)[0] = asciiflag_conv(f1);
-                    GET_OBJ_WEAR(temp)[1] = asciiflag_conv(f2);
-                    GET_OBJ_WEAR(temp)[2] = asciiflag_conv(f3);
-                    GET_OBJ_WEAR(temp)[3] = asciiflag_conv(f4);
-                } else if (!strcmp(tag, "Wght"))
-                    GET_OBJ_WEIGHT(temp) = num;
-                break;
-            case 'V':
-                if (!strcmp(tag, "Vals")) {
-                    sscanf(line, "%d %d %d %d", &t[0], &t[1], &t[2], &t[3]);
-                    for (i = 0; i < NUM_OBJ_VAL_POSITIONS; i++)
-                        GET_OBJ_VAL(temp, i) = t[i];
+            break;
+        case 'C':
+            if (!strcmp(tag, "Cost"))
+                GET_OBJ_COST(temp) = num;
+            break;
+        case 'D':
+            if (!strcmp(tag, "Desc"))
+                temp->description = strdup(line);
+            break;
+        case 'E':
+            if (!strcmp(tag, "EDes")) {
+                struct extra_descr_data *new_desc;
+                char error[40];
+                snprintf(error, sizeof(error) - 1, "rent(Edes): %s", temp->name);
+                if (temp->item_number != NOTHING &&
+                    temp->ex_description &&
+                    (temp->ex_description == obj_proto[real_object(temp->item_number)].ex_description))
+                    temp->ex_description = NULL;
+                CREATE(new_desc, struct extra_descr_data, 1);
+                new_desc->keyword = fread_string(fl, error);
+                new_desc->description = fread_string(fl, error);
+                new_desc->next = temp->ex_description;
+                temp->ex_description = new_desc;
+            }
+            break;
+        case 'F':
+            if (!strcmp(tag, "Flag")) {
+                sscanf(line, "%s %s %s %s", f1, f2, f3, f4);
+                GET_OBJ_EXTRA(temp)[0] = asciiflag_conv(f1);
+                GET_OBJ_EXTRA(temp)[1] = asciiflag_conv(f2);
+                GET_OBJ_EXTRA(temp)[2] = asciiflag_conv(f3);
+                GET_OBJ_EXTRA(temp)[3] = asciiflag_conv(f4);
+            }
+            break;
+        case 'L':
+            if (!strcmp(tag, "Loc "))
+                current->locate = num;
+            break;
+        case 'N':
+            if (!strcmp(tag, "Name"))
+                temp->name = strdup(line);
+            break;
+        case 'P':
+            if (!strcmp(tag, "Perm")) {
+                sscanf(line, "%s %s %s %s", f1, f2, f3, f4);
+                GET_OBJ_AFFECT(temp)[0] = asciiflag_conv(f1);
+                GET_OBJ_AFFECT(temp)[1] = asciiflag_conv(f2);
+                GET_OBJ_AFFECT(temp)[2] = asciiflag_conv(f3);
+                GET_OBJ_AFFECT(temp)[3] = asciiflag_conv(f4);
+            }
+            break;
+        case 'Q': // CORREÇÃO ADICIONADA AQUI
+            if (!strcmp(tag, "Qual:")) {
+                if (version >= 1) {
+                    sscanf(line, "%d", &t[0]);
+                    GET_OBJ_QUALITY(temp) = t[0];
                 }
-                break;
-            default:
-                log1("Unknown tag in rentfile: %s", tag);
+            }
+            break;
+        case 'R':
+            if (!strcmp(tag, "Rent")) // CORREÇÃO: Removido o ":" do final
+                GET_OBJ_RENT(temp) = num;
+            break;
+        case 'S':
+            if (!strcmp(tag, "Shrt"))
+                temp->short_description = strdup(line);
+            break;
+        case 'T':
+            if (!strcmp(tag, "Type"))
+                GET_OBJ_TYPE(temp) = num;
+            break;
+        case 'W':
+            if (!strcmp(tag, "Wear")) {
+                sscanf(line, "%s %s %s %s", f1, f2, f3, f4);
+                GET_OBJ_WEAR(temp)[0] = asciiflag_conv(f1);
+                GET_OBJ_WEAR(temp)[1] = asciiflag_conv(f2);
+                GET_OBJ_WEAR(temp)[2] = asciiflag_conv(f3);
+                GET_OBJ_WEAR(temp)[3] = asciiflag_conv(f4);
+            } else if (!strcmp(tag, "Wght"))
+                GET_OBJ_WEIGHT(temp) = num;
+            break;
+        case 'V':
+            if (!strcmp(tag, "Vals")) {
+                sscanf(line, "%d %d %d %d", &t[0], &t[1], &t[2], &t[3]);
+                for (i = 0; i < NUM_OBJ_VAL_POSITIONS; i++)
+                    GET_OBJ_VAL(temp, i) = t[i];
+            }
+            break;
+        default:
+            log1("Unknown tag in rentfile: %s", tag);
         }
     }
 
