@@ -48,11 +48,11 @@ void load_recipes(void) {
     int component_index = 0;
 
     if (!(fp = fopen(RECIPE_FILE, "r"))) {
-        log1("SYSERR: Não foi possível abrir o arquivo de receitas: %s", RECIPE_FILE); // CORRIGIDO: log1
+        log1("SYSERR: Não foi possível abrir o arquivo de receitas: %s", RECIPE_FILE);
         return;
     }
 
-    log1("...Carregando receitas de %s", RECIPE_FILE); // CORRIGIDO: log1
+    log1("...Carregando receitas de %s", RECIPE_FILE);
 
     while (get_line(fp, line)) {
         tag_argument(line, tag);
@@ -80,7 +80,6 @@ void load_recipes(void) {
             else if (str_cmp(tag, "Master") == 0) current_recipe->is_master_recipe = (atoi(line) == 1);
             else if (str_cmp(tag, "Component") == 0) {
                 if (component_index < MAX_RECIPE_COMPONENTS) {
-                    // CORRIGIDO: Usando %hd para o vnum (short)
                     sscanf(line, "%hd %d", 
                         &current_recipe->components[component_index].vnum, 
                         &current_recipe->components[component_index].quality_points);
@@ -90,7 +89,7 @@ void load_recipes(void) {
         }
     }
     fclose(fp);
-    log1("...%d receitas carregadas.", list_length(recipe_list)); // CORRIGIDO: log1
+    log1("...%d receitas carregadas.", list_length(recipe_list));
 }
 
 void free_recipes(void) {
@@ -160,16 +159,146 @@ int get_quality_value(struct obj_data *obj) {
     }
 }
 
-
-/* --- Comandos do Jogador (Implementação Inicial) --- */
+/* --- Comandos do Jogador --- */
 
 ACMD(do_gather) {
     send_to_char(ch, "O sistema de coleta ainda está sendo desenvolvido.\r\n");
 }
 
-ACMD(do_craft) {
-    send_to_char(ch, "O sistema de produção de itens ainda está sendo desenvolvido.\r\n");
+/* * LÓGICA COMPLETA DO COMANDO 'PRODUZIR'
+ */
+ACMD(do_craft)
+{
+    char arg[MAX_INPUT_LENGTH];
+    struct recipe_data *recipe;
+    struct obj_data *comp_list[MAX_RECIPE_COMPONENTS][100]; // Matriz para agrupar componentes por tipo
+    int comp_count[MAX_RECIPE_COMPONENTS] = {0};
+    int total_quality_pts[MAX_RECIPE_COMPONENTS] = {0};
+    int material_bonus = 0;
+    bool found = FALSE;
+    int i, j, k;
+
+    one_argument(argument, arg);
+
+    if (!*arg) {
+        send_to_char(ch, "Produzir o quê? (Ex: produzir 'Adaga de Ferro')\r\n");
+        return;
+    }
+
+    // 1. Encontrar a receita pelo nome
+    for (recipe = recipe_list; recipe; recipe = recipe->next) {
+        if (is_abbrev(arg, recipe->name)) {
+            found = TRUE;
+            break;
+        }
+    }
+
+    if (!found) {
+        send_to_char(ch, "Você não conhece essa receita.\r\n");
+        return;
+    }
+
+    // 2. Verificar perícia do jogador
+    if (GET_SKILL(ch, recipe->skill_id) <= 0) {
+        send_to_char(ch, "Você não tem a perícia necessária para produzir isso.\r\n");
+        return;
+    }
+
+    // 3. Verificar estação de trabalho
+    if (recipe->station_vnum > 0) {
+        bool station_found = FALSE;
+        struct obj_data *obj;
+        for (obj = world[IN_ROOM(ch)].contents; obj; obj = obj->next_content) {
+            if (GET_OBJ_VNUM(obj) == recipe->station_vnum) {
+                station_found = TRUE;
+                break;
+            }
+        }
+        if (!station_found) {
+            send_to_char(ch, "Você precisa estar em uma estação de trabalho adequada para produzir isso.\r\n");
+            return;
+        }
+    }
+
+    // 4. Verificar e agrupar componentes
+    for (i = 0; i < MAX_RECIPE_COMPONENTS; i++) {
+        obj_vnum vnum_needed = recipe->components[i].vnum;
+        if (vnum_needed <= 0) continue;
+
+        struct obj_data *comp;
+        for (comp = ch->carrying; comp; comp = comp->next_content) {
+            if (GET_OBJ_VNUM(comp) == vnum_needed) {
+                if (comp_count[i] < 100) {
+                    comp_list[i][comp_count[i]++] = comp;
+                    total_quality_pts[i] += get_quality_value(comp);
+                }
+            }
+        }
+
+        // Verifica se tem pontos de qualidade suficientes para este componente
+        if (total_quality_pts[i] < recipe->components[i].quality_points) {
+            send_to_char(ch, "Você não tem os componentes necessários (falta material para o VNUM %d).\r\n", vnum_needed);
+            return;
+        }
+    }
+
+    // Se todas as verificações passaram, podemos consumir os itens
+    send_to_char(ch, "Você começa a trabalhar na sua criação...\r\n");
+    act("$n começa a trabalhar em um item.", TRUE, ch, 0, 0, TO_ROOM);
+
+    // 5. Consumir componentes e calcular bônus de material
+    for (i = 0; i < MAX_RECIPE_COMPONENTS; i++) {
+        if (recipe->components[i].vnum <= 0) continue;
+
+        int points_needed = recipe->components[i].quality_points;
+        int points_consumed = 0;
+
+        // Ordenar os componentes por qualidade (menor para maior) para consumir os piores primeiro
+        for (j = 0; j < comp_count[i] - 1; j++) {
+            for (k = j + 1; k < comp_count[i]; k++) {
+                if (GET_OBJ_QUALITY(comp_list[i][j]) > GET_OBJ_QUALITY(comp_list[i][k])) {
+                    struct obj_data *temp = comp_list[i][j];
+                    comp_list[i][j] = comp_list[i][k];
+                    comp_list[i][k] = temp;
+                }
+            }
+        }
+        
+        // Consumir até atingir os pontos
+        for (j = 0; j < comp_count[i]; j++) {
+            if (points_consumed >= points_needed) break;
+            
+            struct obj_data *comp_to_use = comp_list[i][j];
+            int q_value = get_quality_value(comp_to_use);
+            points_consumed += q_value;
+            material_bonus += q_value; // Adiciona ao bônus total
+            extract_obj(comp_to_use);
+        }
+    }
+
+    // 6. Calcular a qualidade final do item
+    int final_quality = calculate_quality(ch, recipe->skill_id, recipe->difficulty, material_bonus / 5); // Bônus de material escalado
+
+    // 7. Criar o item resultante
+    obj_rnum rnum = real_object(recipe->result_vnum);
+    if (rnum == NOTHING) {
+        send_to_char(ch, "Erro: A receita está corrompida. Avise um Imortal.\r\n");
+        log1("SYSERR: do_craft: Receita %d aponta para vnum de resultado inválido %d.", recipe->vnum, recipe->result_vnum);
+        return;
+    }
+    
+    struct obj_data *result_obj = read_object(rnum, REAL);
+
+    // 8. Aplicar qualidade ao item
+    apply_quality_to_obj(result_obj, final_quality);
+    
+    // 9. Entregar o item ao jogador
+    obj_to_char(result_obj, ch);
+
+    send_to_char(ch, "Você produziu com sucesso %s!\r\n", result_obj->short_description);
+    act("$n termina de produzir $p.", TRUE, ch, result_obj, 0, TO_ROOM);
 }
+
 
 ACMD(do_legacy) {
     send_to_char(ch, "O sistema de Legado ainda está sendo desenvolvido.\r\n");
