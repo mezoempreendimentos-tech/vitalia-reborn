@@ -1170,6 +1170,7 @@ struct player_special_data_saved {
     ubyte bad_pws;                         /**< number of bad login attempts */
     sbyte conditions[3];                   /**< Drunk, hunger, and thirst */
     struct txt_block *comm_hist[NUM_HIST]; /**< Communication history */
+    #define MAX_CRAFT_SKILLS    
     ubyte craft_skills[MAX_CRAFT_SKILLS + 1]; /* Nossas novas perícias de crafting */ // <-- ADICIONE ESTA LINHA
     ubyte page_length;                     /**< Max number of rows of text to send at once */
     ubyte screen_width;                    /**< How wide the display page is */
