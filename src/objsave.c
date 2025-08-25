@@ -163,6 +163,9 @@ int objsave_save_obj_record(struct obj_data *obj, FILE *fp, int locate)
        é diferente da qualidade do protótipo (que é 0, ou QUALITY_COMUM). */
     if (GET_OBJ_QUALITY(obj) != GET_OBJ_QUALITY(temp))
         fprintf(fp, "Qual: %d\n", GET_OBJ_QUALITY(obj));
+    /* MODIFICAÇÃO 2: Adicionamos o salvamento da Qualidade aqui. */
+    if (GET_OBJ_QUALITY(obj) != GET_OBJ_QUALITY(temp))
+        fprintf(fp, "Qual: %d\n", GET_OBJ_QUALITY(obj));
 
     fprintf(fp, "\n");
 
