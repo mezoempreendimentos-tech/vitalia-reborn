@@ -1204,5 +1204,9 @@ int get_mob_skill(struct char_data *ch, int skill_num);
 
 /* Defines para o sistema de Crafting */
 #define GET_OBJ_QUALITY(obj)     ((obj)->quality)  
+
+/* Defines para o sistema de Crafting */
+#define GET_CRAFT_SKILL(ch, skill) ((ch)->player_specials->saved.craft_skills[(skill)])
+#define GET_OBJ_QUALITY(obj)     ((obj)->quality)
   
 #endif /* _UTILS_H_ */
