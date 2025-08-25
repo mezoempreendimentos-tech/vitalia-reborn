@@ -812,7 +812,9 @@ void boot_db(void)
     create_command_list(); /* aedit patch -- M. Scott */
 
     log1("Assigning function pointers:");
-
+    
+    assign_craft_skills();
+    
     if (!no_specials) {
         log1("   Mobiles.");
         assign_mobiles();
