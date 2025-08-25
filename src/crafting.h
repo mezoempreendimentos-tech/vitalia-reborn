@@ -4,7 +4,7 @@
 /* --- Constantes e Definições --- */
 
 // Arquivos de dados para o sistema de crafting
-#define RECIPE_FILE     "../lib/world/recipes.rcp"
+#define RECIPE_PATH     "../lib/world/rcp/" // Define o caminho para a pasta de receitas
 #define CS_FILE         "../lib/misc/crskills.dat" // Nosso novo arquivo de perícias de crafting
 
 // Limites do sistema
