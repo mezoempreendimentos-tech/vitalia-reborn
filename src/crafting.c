@@ -16,9 +16,34 @@
 #include "act.h"
 #include "crafting.h"
 
-/* ... (O resto do arquivo, incluindo Variáveis Globais, Funções de Carregamento, etc. permanece o mesmo) ... */
-/* ... A única alteração necessária é na função load_recipes e calculate_quality ... */
+/* --- Variáveis Globais --- */
 
+struct recipe_data *recipe_list = NULL;
+struct craft_skill_data *craft_skill_list = NULL;
+
+const char *quality_names[NUM_QUALITIES] = {
+    "§w[Comum]§n",
+    "§g[Incomum]§n",
+    "§b[Raro]§n",
+    "§m[Épico]§n",
+    "§Y[Lendário]§n",
+    "§C[Obra Prima]§n",
+    "§R[DIVINA]§n"
+};
+
+
+/* --- Funções de Carregamento --- */
+
+// Conta o número de receitas na lista
+int list_length(struct recipe_data *list) {
+    int count = 0;
+    struct recipe_data *r;
+    for (r = list; r; r = r->next)
+        count++;
+    return count;
+}
+
+// Carrega as receitas do arquivo recipes.rcp
 void load_recipes(void) {
     FILE *fp;
     char line[256], tag[128];
@@ -52,8 +77,7 @@ void load_recipes(void) {
             else if (str_cmp(tag, "Enigma") == 0) current_recipe->enigma_name = strdup(line);
             else if (str_cmp(tag, "ResultVnum") == 0) current_recipe->result_vnum = atoi(line);
             else if (str_cmp(tag, "ResultQty") == 0) current_recipe->result_quantity = atoi(line);
-            // CORRIGIDO: A tag no arquivo de receitas agora deve ser "CrSkill"
-            else if (str_cmp(tag, "CrSkill") == 0) current_recipe->crskill_id = atoi(line);
+            else if (str_cmp(tag, "CrSkill") == 0) current_recipe->crskill_id = atoi(line); // CORRIGIDO
             else if (str_cmp(tag, "Difficulty") == 0) current_recipe->difficulty = atoi(line);
             else if (str_cmp(tag, "Station") == 0) current_recipe->station_vnum = atoi(line);
             else if (str_cmp(tag, "Master") == 0) current_recipe->is_master_recipe = (atoi(line) == 1);
@@ -71,46 +95,36 @@ void load_recipes(void) {
     log1("...%d receitas carregadas.", list_length(recipe_list));
 }
 
-/* ... (free_recipes permanece o mesmo) ... */
+// Libera a memória das receitas
+void free_recipes(void) {
+    struct recipe_data *recipe, *next_recipe;
+    for (recipe = recipe_list; recipe; recipe = next_recipe) {
+        next_recipe = recipe->next;
+        if (recipe->name) free(recipe->name);
+        if (recipe->enigma_name) free(recipe->enigma_name);
+        free(recipe);
+    }
+}
 
-int calculate_quality(struct char_data *ch, int crskill_id, int difficulty, int material_bonus) { // CORRIGIDO
-    if (rand_number(1, 100) == 1) {
-        return QUALITY_OBRA_PRIMA;
+// Carrega as perícias de crafting do arquivo crskills.dat
+void load_crafting_skills(void) {
+    FILE *fp;
+    char line[256];
+    
+    if (!(fp = fopen(CS_FILE, "r"))) {
+        log1("SYSERR: Não foi possível abrir o arquivo de perícias de crafting: %s", CS_FILE);
+        return;
     }
 
-    int roll = dice(1, 20);
-    int skill_bonus;
-    int final_result;
+    log1("...Carregando perícias de crafting de %s", CS_FILE);
 
-    if (roll == 20) return QUALITY_LENDARIO;
-    if (roll == 1) return QUALITY_COMUM;
+    while(get_line(fp, line)) {
+        if (*line == '$') break;
 
-    // CORRIGIDO: Usará GET_CRAFT_SKILL (que vamos definir a seguir)
-    skill_bonus = (GET_CRAFT_SKILL(ch, crskill_id) - difficulty) / 5;
-    final_result = roll + skill_bonus + material_bonus;
+        struct craft_skill_data *skill;
+        CREATE(skill, struct craft_skill_data, 1);
 
-    if (final_result <= 5) return QUALITY_COMUM;
-    if (final_result <= 10) return QUALITY_INCOMUM;
-    if (final_result <= 16) return QUALITY_RARO;
-    if (final_result <= 24) return QUALITY_EPICO;
-    
-    return QUALITY_EPICO;
-}
-
-/* ... (apply_quality_to_obj e get_quality_value permanecem os mesmos) ... */
-
-ACMD(do_craft)
-{
-    // ... (a lógica interna de do_craft que já fizemos) ...
-    // A única linha que precisa mudar dentro de do_craft é a verificação de perícia:
-    
-    // LINHA A SER ALTERADA DENTRO DE do_craft:
-    // if (GET_SKILL(ch, recipe->skill_id) <= 0) {
-    // DEVE VIRAR:
-    // if (GET_CRAFT_SKILL(ch, recipe->crskill_id) <= 0) {
-    
-    // O resto do código que te passei para do_craft já está correto
-    // Se quiser, posso fornecer a função do_craft inteira e atualizada.
-}
-
-/* ... (o resto do arquivo) ... */
+        skill->id = atoi(strtok(line, "~"));
+        skill->name = strdup(strtok(NULL, "~"));
+        
+        skill->next = craft_skill
