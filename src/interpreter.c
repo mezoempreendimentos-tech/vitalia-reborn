@@ -39,6 +39,7 @@
 #include "mud_event.h"
 #include "spedit.h"
 #include "fight.h"
+#include "crafting.h"
 
 ACMD(do_formula);
 
