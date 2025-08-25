@@ -8,6 +8,7 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "crafting.h"
 #include "structs.h"
 #include "utils.h"
 #include "comm.h"
