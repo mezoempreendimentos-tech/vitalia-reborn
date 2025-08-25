@@ -38,6 +38,7 @@
 #include "spirits.h"
 #include "graph.h"
 #include <math.h>
+#include "crafting.h"
 
 /* external functions*/
 extern char *get_spell_name(int vnum);
