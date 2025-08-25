@@ -1,0 +1,11 @@
+# Receita da Adaga de Ferro Simples
+Recipe      99901
+Name        Adaga de Ferro Simples~
+ResultVnum  99903
+ResultQty   1
+CrSkill     1
+Difficulty  5
+Station     99900
+Component   99901 1
+Component   99902 1
+$
