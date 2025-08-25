@@ -10,7 +10,7 @@
 // Limites do sistema
 #define MAX_RECIPE_COMPONENTS 5
 #define MAX_LEGACY_RECIPES    10 // CORRIGIDO: Aumentado para 10
-#define MAX_CRAFT_SKILLS      50 
+
 
 /* --- Enumerações --- */
 
