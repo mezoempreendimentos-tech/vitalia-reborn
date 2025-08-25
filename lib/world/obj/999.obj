@@ -1,0 +1,60 @@
+#99900
+forja pedra~
+uma forja de pedra
+~
+Uma grande forja de pedra domina o ambiente, emanando um calor intenso.
+~
+~
+15 0 0 0
+0 0 0 0
+500 0 0 0 0
+E
+forja~
+Esta é uma estação de trabalho essencial para qualquer ferreiro.
+~
+
+#99901
+lingote ferro~
+um lingote de ferro
+~
+Um bloco retangular de ferro puro, pronto para ser moldado.
+~
+~
+25 A 0 0
+0 0 0 0
+5 10 20 1 0
+E
+lingote ferro~
+Um material básico para ferraria.
+~
+
+#99902
+cabo madeira simples~
+um cabo de madeira simples
+~
+Um cabo de madeira lixado, perfeito para ferramentas ou armas pequenas.
+~
+~
+25 A 0 0
+0 0 0 0
+1 5 10 1 0
+E
+cabo madeira~
+Um material básico para diversas criações.
+~
+
+#99903
+adaga ferro simples~
+uma adaga de ferro simples
+~
+Uma adaga de ferro recém-forjada, simples mas afiada.
+~
+~
+1 A 0 0
+1 1 6 3
+3 8 16 1 0
+E
+adaga ferro~
+Uma arma simples, ideal para iniciantes.
+~
+$
