@@ -41,6 +41,9 @@
 #include "fight.h"
 #include "crafting.h"
 
+ACMD(do_gather);
+ACMD(do_craft);
+ACMD(do_legacy);
 ACMD(do_formula);
 
 /* local (file scope) functions */
