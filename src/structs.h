@@ -1,3 +1,4 @@
+#include "crskill.h"
 /**
  * @file structs.h
  * Core structures used within the core mud code.
