@@ -21,13 +21,13 @@
 struct recipe_data *recipe_list = NULL;
 
 const char *quality_names[NUM_QUALITIES] = {
-    "§w[Comum]§n",           // Branco
-    "§g[Incomum]§n",         // Verde
-    "§b[Raro]§n",            // Azul
-    "§m[Épico]§n",           // Magenta/Roxo
-    "§Y[Lendário]§n",        // Amarelo
-    "§C[Obra Prima]§n",      // Ciano Brilhante
-    "§R[DIVINA]§n"           // Vermelho Brilhante
+    "§w[Comum]§n",
+    "§g[Incomum]§n",
+    "§b[Raro]§n",
+    "§m[Épico]§n",
+    "§Y[Lendário]§n",
+    "§C[Obra Prima]§n",
+    "§R[DIVINA]§n"
 };
 
 
@@ -48,11 +48,11 @@ void load_recipes(void) {
     int component_index = 0;
 
     if (!(fp = fopen(RECIPE_FILE, "r"))) {
-        logg("SYSERR: Não foi possível abrir o arquivo de receitas: %s", RECIPE_FILE); // CORRIGIDO: logg
+        log1("SYSERR: Não foi possível abrir o arquivo de receitas: %s", RECIPE_FILE); // CORRIGIDO: log1
         return;
     }
 
-    logg("...Carregando receitas de %s", RECIPE_FILE); // CORRIGIDO: logg
+    log1("...Carregando receitas de %s", RECIPE_FILE); // CORRIGIDO: log1
 
     while (get_line(fp, line)) {
         tag_argument(line, tag);
@@ -80,7 +80,8 @@ void load_recipes(void) {
             else if (str_cmp(tag, "Master") == 0) current_recipe->is_master_recipe = (atoi(line) == 1);
             else if (str_cmp(tag, "Component") == 0) {
                 if (component_index < MAX_RECIPE_COMPONENTS) {
-                    sscanf(line, "%d %d", 
+                    // CORRIGIDO: Usando %hd para o vnum (short)
+                    sscanf(line, "%hd %d", 
                         &current_recipe->components[component_index].vnum, 
                         &current_recipe->components[component_index].quality_points);
                     component_index++;
@@ -89,7 +90,7 @@ void load_recipes(void) {
         }
     }
     fclose(fp);
-    logg("...%d receitas carregadas.", list_length(recipe_list)); // CORRIGIDO: logg
+    log1("...%d receitas carregadas.", list_length(recipe_list)); // CORRIGIDO: log1
 }
 
 void free_recipes(void) {
