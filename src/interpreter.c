@@ -40,6 +40,7 @@
 #include "spedit.h"
 #include "fight.h"
 
+ACMD(do_setquality);
 ACMD(do_formula);
 
 /* local (file scope) functions */
