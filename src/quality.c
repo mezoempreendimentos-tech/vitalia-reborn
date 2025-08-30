@@ -1,8 +1,13 @@
 #include "structs.h"
 #include "utils.h"
 #include "quality.h"
-#include <string.h>
-#include <stdlib.h>
+#include "conf.h"     // A configuração principal, geralmente inclui headers do sistema.
+#include "sysdep.h"   // Dependências do sistema, essencial para tipos como ssize_t.
+#include <stdio.h>    // Para a função snprintf() e o tipo FILE.
+#include <string.h>   // Para as funções strdup() e strstr().
+#include <stdlib.h>   // Para a função rand_number().
+#include "structs.h"  // Estruturas de dados principais do MUD.
+#include "utils.h"    // Utilitários gerais do MUD.
 
 // Definição da tabela de qualidades com os valores que você especificou.
 const struct quality_info quality_data[NUM_QUALITIES] = {
