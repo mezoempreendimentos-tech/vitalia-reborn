@@ -38,6 +38,7 @@
 #include "spirits.h"
 #include "graph.h"
 #include <math.h>
+#include "quality.h"
 
 /* external functions*/
 extern char *get_spell_name(int vnum);
@@ -6240,4 +6241,53 @@ ACMD(do_portal)
 
     mudlog(NRM, MAX(LVL_GOD, GET_INVIS_LEV(ch)), TRUE, "(GC) %s created portal%s from %d to %d (timer: %s)",
            GET_NAME(ch), bidirectional ? "s" : "", world[IN_ROOM(ch)].number, dest_vnum, timer_buf);
+}
+
+ACMD(do_setquality)
+{
+    char arg1[MAX_INPUT_LENGTH], arg2[MAX_INPUT_LENGTH];
+    struct obj_data *obj;
+    int quality_level = -1, vnum;
+
+    two_arguments(argument, arg1, arg2);
+
+    if (!*arg1 || !*arg2) {
+        send_to_char(ch, "Uso: setquality <objeto> <qualidade>\r\n");
+        send_to_char(ch, "Qualidades: Comum, Incomum, Raro, Epico, Lendario, ObraPrima, Divino\r\n");
+        return;
+    }
+
+    if (!(obj = get_obj_in_list_vis(ch, arg1, NULL, ch->carrying))) {
+        send_to_char(ch, "Você não está segurando esse objeto.\r\n");
+        return;
+    }
+    
+    const char *quality_names[] = {"comum", "incomum", "raro", "epico", "lendario", "obraprima", "divino"};
+    for (int i = 0; i < NUM_QUALITIES; i++) {
+        if (is_abbrev(arg2, quality_names[i])) {
+            quality_level = i;
+            break;
+        }
+    }
+
+    if (quality_level == -1) {
+        send_to_char(ch, "Qualidade inválida.\r\n");
+        return;
+    }
+
+    vnum = get_obj_vnum(obj);
+    if (vnum <= 0) {
+        send_to_char(ch, "Não é possível definir a qualidade para este objeto.\r\n");
+        return;
+    }
+
+    // Remove o objeto antigo
+    extract_obj(obj);
+    
+    // Cria um novo objeto "limpo" e aplica a qualidade
+    struct obj_data *new_obj = read_object(vnum, VIRTUAL);
+    set_object_quality(new_obj, (enum item_quality)quality_level);
+    obj_to_char(new_obj, ch);
+
+    send_to_char(ch, "Qualidade do objeto alterada.\r\n");
 }
