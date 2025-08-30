@@ -312,6 +312,7 @@ cpp_extern const struct command_info cmd_info[] = {
     {"sedit", "sedit", POS_DEAD, do_oasis_sedit, LVL_BUILDER, 0, CMD_NOARG},
     {"send", "send", POS_SLEEPING, do_send, LVL_GOD, 0, CMD_NOARG},
     {"set", "set", POS_DEAD, do_set, LVL_IMMORT, 0, CMD_NOARG},
+    { "setquality",  LVL_GOD, 0, do_setquality, 0, 0},
     {"shout", "sho", POS_RESTING, do_gen_comm, 0, SCMD_SHOUT, CMD_NOARG},
     {"shoot", "shoo", POS_RESTING, do_cast, 0, SKILL_BOWS, CMD_TWOARG},
     {"show", "show", POS_DEAD, do_show, LVL_IMMORT, 0, CMD_NOARG},
