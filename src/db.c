@@ -2839,6 +2839,10 @@ struct obj_data *read_object(obj_vnum nr, int type) /* and obj_rnum */
     copy_proto_script(&obj_proto[i], obj, OBJ_TRIGGER);
     assign_triggers(obj, OBJ_TRIGGER);
 
+    /* APLICA O SISTEMA DE QUALIDADE AO OBJETO RECÉM-CRIADO */
+    enhance_object(obj);
+
+        
     return (obj);
 }
 
